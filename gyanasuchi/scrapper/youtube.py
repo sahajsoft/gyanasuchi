@@ -1,7 +1,10 @@
 from typing import TypedDict, List
 
+from modal import Stub, Image
 from pytube import Playlist
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
+
+stub = Stub(name="fetch-transcripts", image=Image.debian_slim().poetry_install_from_file('pyproject.toml'))
 
 
 class TranscriptLine(TypedDict):
@@ -25,7 +28,15 @@ def videos_from_playlist(playlist_id: str) -> List[str]:
     return [video_url.split('v=')[1] for video_url in playlist.video_urls]
 
 
-transcripts = [fetch_transcript(video_id) for video_id in videos_from_playlist('PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7')]
-for t in transcripts:
-    print(t)
-    print()
+@stub.function()
+def fetch_transcripts_for_playlist(playlist_id: str) -> List[List[TranscriptLine]]:
+    return [fetch_transcript(video_id) for video_id in videos_from_playlist(playlist_id)]
+
+
+@stub.local_entrypoint()
+def main(playlist_id: str) -> None:
+    transcripts = fetch_transcripts_for_playlist.remote(playlist_id)
+
+    for t in transcripts:
+        print(t)
+        print()
