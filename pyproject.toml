@@ -9,7 +9,7 @@ readme = "README.md"
 python = ">=3.11,<3.12"
 youtube-transcript-api = "^0.6.1"
 pytube = "^15.0.0"
-modal = "^0.56.4235"
+modal = "^0.56.4326"
 
 
 [build-system]
