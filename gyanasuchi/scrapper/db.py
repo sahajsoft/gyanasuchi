@@ -55,7 +55,7 @@ def insert_if_not_dupe(session: Session, obj: Base) -> bool:
         session.add(obj)
         session.commit()
     except IntegrityError as e:
-        logger.warning(f"Error in inserting {obj}: {e}")
+        logger.warning(f"Unable to insert {obj}: {e}")
         session.rollback()
         return False
 
