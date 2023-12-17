@@ -8,5 +8,10 @@ This is a bot that will collect information from various sources, process it and
 
 ```commandline
 poetry install
-poetry run modal run gyanasuchi/scrapper/youtube.py --playlist-id PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7
+poetry run python gyanasuchi/scrapper/setup.py
+```
+
+## Run
+```commandline
+poetry run modal run gyanasuchi/scrapper/fetch_playlist_videos.py
 ```
