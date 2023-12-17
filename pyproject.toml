@@ -10,6 +10,9 @@ python = ">=3.11,<3.12"
 youtube-transcript-api = "^0.6.1"
 pytube = "^15.0.0"
 modal = "^0.56.4326"
+python-dotenv = "^1.0.0"
+mysql-connector-python = "^8.2.0"
+sqlalchemy = "^2.0.23"
 
 
 [build-system]
