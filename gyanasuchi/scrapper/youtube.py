@@ -1,14 +1,15 @@
 import logging
+from datetime import datetime
 from typing import TypedDict, List, Dict, Iterator
 
 from dotenv import load_dotenv
 from modal import Stub, Image
 from pytube import Playlist
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
-from gyanasuchi.scrapper.db import YouTubePlaylist, db_engine, Base
+from gyanasuchi.scrapper.db import YouTubePlaylist, db_engine, Base, YouTubePlaylistVideo, insert_if_not_dupe
 
 stub = Stub(
     name="fetch-transcripts",
@@ -58,13 +59,25 @@ async def process_playlists(playlists: Iterator[YouTubePlaylist]) -> Dict[Playli
 def main() -> None:
     load_dotenv()
     logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s - %(message)s', level=logging.INFO)
-    playlists = initiate()
-
-    print(process_playlists.remote(playlists))
-
-
-def initiate() -> List[YouTubePlaylist]:
+    run_id = datetime.now()
     engine = db_engine()
+    playlists = initiate(engine)
+
+    playlist_videos: Dict[PlaylistId, List[VideoId]] = process_playlists.remote(playlists)
+
+    with Session(engine) as session:
+        [
+            insert_if_not_dupe(session, YouTubePlaylistVideo(
+                playlist_id=playlist_id,
+                video_id=video_id,
+                first_inserted_at_run=run_id
+            ))
+            for playlist_id, video_ids in playlist_videos.items()
+            for video_id in video_ids
+        ]
+
+
+def initiate(engine: Engine) -> List[YouTubePlaylist]:
     Base.metadata.create_all(bind=engine)
     playlists = [
         YouTubePlaylist(id="PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7", name="DevDay_"),
@@ -72,12 +85,6 @@ def initiate() -> List[YouTubePlaylist]:
     ]
 
     with Session(engine) as session:
-        for playlist in playlists:
-            try:
-                session.add(playlist)
-                session.commit()
-            except IntegrityError as e:
-                logging.warning(f"Error inserting playlist {playlist.id}: {e}")
-                session.rollback()
+        [insert_if_not_dupe(session, playlist) for playlist in playlists]
 
     return playlists
