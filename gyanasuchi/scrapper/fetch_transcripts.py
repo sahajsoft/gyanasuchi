@@ -55,7 +55,7 @@ def fetch_videos_without_transcripts(engine: Engine) -> List[Type[YouTubeVideo]]
 def main() -> None:
     load_dotenv()
     setup_logging()
-    engine = db_engine()
+    engine = db_engine(False, 120)
     run_id = datetime.now()
 
     for video in fetch_videos_without_transcripts(engine):
