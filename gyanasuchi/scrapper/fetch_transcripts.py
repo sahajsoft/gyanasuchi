@@ -1,14 +1,16 @@
 import logging
 from datetime import datetime
-from typing import List, TypedDict
+from typing import List, TypedDict, Type
 
 from dotenv import load_dotenv
+from sqlalchemy import Engine
+from sqlalchemy.exc import DatabaseError
 from sqlalchemy.orm import Session
 from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
 from gyanasuchi.common import setup_logging
 from gyanasuchi.modal import create_stub
-from gyanasuchi.scrapper.db import YouTubeTranscriptLine, db_engine
+from gyanasuchi.scrapper.db import YouTubeTranscriptLine, db_engine, YouTubeVideo
 
 stub = create_stub(__name__)
 logger = logging.getLogger(__name__)
@@ -42,6 +44,13 @@ def fetch_transcript_if_not_in_db(video_id: str, run_id: datetime, session: Sess
     ]
 
 
+def fetch_videos_without_transcripts(engine: Engine) -> List[Type[YouTubeVideo]]:
+    with Session(engine) as session:
+        return session.query(YouTubeVideo) \
+            .filter_by(fetched_transcripts_at_run=None) \
+            .all()
+
+
 @stub.local_entrypoint()
 def main() -> None:
     load_dotenv()
@@ -49,7 +58,25 @@ def main() -> None:
     engine = db_engine()
     run_id = datetime.now()
 
-    video_id = "kqBB-Z-yrcs"
-    with Session(engine) as session:
-        session.add_all(fetch_transcript_if_not_in_db(video_id, run_id, session))
-        session.commit()
+    for video in fetch_videos_without_transcripts(engine):
+        with Session(engine) as session:
+            transcripts = fetch_transcript_if_not_in_db(video.id, run_id, session)
+            logger.info(f"Fetched {len(transcripts)=} for {video.id=}")
+
+            session.add_all(transcripts)
+            logger.info(f"Added all {len(transcripts)=} to the session")
+
+            logger.info(f"Updating the run id for the video. Existing value {video.fetched_transcripts_at_run=}")
+            video.fetched_transcripts_at_run = run_id
+            logger.info(f"Updated {video=}")
+
+            try:
+                logger.info(f"Committing transaction for {video.id=}")
+                session.commit()
+                logger.info(f"Transaction committed for {video.id=}")
+            except DatabaseError as e:
+                logger.warning(
+                    f"Could not complete the transaction for {video.id=} because {e}. "
+                    "This transaction will be retried in the next run."
+                )
+                session.rollback()

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from gyanasuchi.common import setup_logging
 from gyanasuchi.modal import create_stub
-from gyanasuchi.scrapper.db import YouTubePlaylist, db_engine, YouTubePlaylistVideo, insert_if_not_dupe
+from gyanasuchi.scrapper.db import YouTubePlaylist, db_engine, YouTubePlaylistVideo, insert_if_not_dupe, YouTubeVideo
 
 stub = create_stub(__name__)
 PlaylistId = str
@@ -34,6 +34,14 @@ def _map_playlists_to_videos(playlist_videos: PlaylistToVideos, session: Session
     ]
 
 
+def _add_youtube_videos_from_playlist(playlist_videos: PlaylistToVideos, session: Session, run_id: datetime):
+    [
+        insert_if_not_dupe(session, YouTubeVideo(id=video_id, first_inserted_at_run=run_id))
+        for playlist_id, video_ids in playlist_videos.items()
+        for video_id in video_ids
+    ]
+
+
 @stub.function()
 async def fetch_videos_for_playlist(playlists: Iterator[YouTubePlaylist]) -> PlaylistToVideos:
     return {
@@ -53,3 +61,4 @@ def main() -> None:
         playlists = session.query(YouTubePlaylist).all()
         playlist_videos: PlaylistToVideos = fetch_videos_for_playlist.remote(playlists)
         _map_playlists_to_videos(playlist_videos, session, run_id)
+        _add_youtube_videos_from_playlist(playlist_videos, session, run_id)

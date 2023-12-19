@@ -21,11 +21,27 @@ class YouTubePlaylist(Base):
         return f'YouTubePlaylist(id="{self.id}", name="{self.name}")'
 
 
-class YouTubePlaylistVideo(Base):
+class YouTubeVideo(Base):
     __tablename__ = "YOUTUBE_VIDEO"
 
+    id = Column(String(20), primary_key=True)
+    first_inserted_at_run = Column(DateTime, nullable=False)
+    fetched_transcripts_at_run = Column(DateTime, nullable=True)
+    last_failed_transcripts_run = Column(DateTime, nullable=True)
+
+    def __repr__(self) -> str:
+        return 'YouTubeVideo(' \
+               f'id="{self.id}", ' \
+               f'first_inserted_at_run="{self.first_inserted_at_run}", ' \
+               f'fetched_transcripts_at_run="{self.fetched_transcripts_at_run}", ' \
+               f'last_failed_transcripts_run="{self.last_failed_transcripts_run}")'
+
+
+class YouTubePlaylistVideo(Base):
+    __tablename__ = "YOUTUBE_PLAYLIST_TO_VIDEOS"
+
     playlist_id = Column(String(40), ForeignKey('YOUTUBE_PLAYLISTS.id'), primary_key=True)
-    video_id = Column(String(20), primary_key=True)
+    video_id = Column(String(20), ForeignKey('YOUTUBE_VIDEO.id'), primary_key=True)
     first_inserted_at_run = Column(DateTime, nullable=False)
 
     __table_args__ = (
@@ -58,7 +74,7 @@ def env(key: str, default: str = None) -> str:
     return os.environ.get(key, default)
 
 
-def db_engine() -> Engine:
+def db_engine(timeout: int = 20) -> Engine:
     user = env("DATABASE_USERNAME")
     password = env("DATABASE_PASSWORD")
     host = env("DATABASE_HOST")
@@ -66,7 +82,9 @@ def db_engine() -> Engine:
 
     return create_engine(
         url=f"mysql+mysqlconnector://{user}:{password}@{host}:3306/{database_name}",
-        echo=True
+        echo=False,
+        echo_pool=True,
+        pool_timeout=timeout
     )
 
 
