@@ -74,7 +74,7 @@ def env(key: str, default: str = None) -> str:
     return os.environ.get(key, default)
 
 
-def db_engine(timeout: int = 20) -> Engine:
+def db_engine(echo: bool = True, timeout: int = 20) -> Engine:
     user = env("DATABASE_USERNAME")
     password = env("DATABASE_PASSWORD")
     host = env("DATABASE_HOST")
@@ -82,7 +82,7 @@ def db_engine(timeout: int = 20) -> Engine:
 
     return create_engine(
         url=f"mysql+mysqlconnector://{user}:{password}@{host}:3306/{database_name}",
-        echo=False,
+        echo=echo,
         echo_pool=True,
         pool_timeout=timeout
     )
