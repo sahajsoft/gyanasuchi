@@ -1,10 +1,9 @@
 from datetime import datetime
-from typing import TypedDict, List, Dict, Iterator
+from typing import List, Dict, Iterator
 
 from dotenv import load_dotenv
 from pytube import Playlist
 from sqlalchemy.orm import Session
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
 
 from gyanasuchi.common import setup_logging
 from gyanasuchi.modal import create_stub
@@ -14,20 +13,6 @@ stub = create_stub(__name__)
 PlaylistId = str
 VideoId = str
 PlaylistToVideos = Dict[PlaylistId, List[VideoId]]
-
-
-class TranscriptLine(TypedDict):
-    text: str
-    start: float
-    duration: float
-
-
-def fetch_transcript(video_id: str) -> List[TranscriptLine]:
-    print(f'fetching transcripts for {video_id}')
-    try:
-        return YouTubeTranscriptApi.get_transcript(video_id)
-    except (TranscriptsDisabled, NoTranscriptFound):
-        return []
 
 
 def _videos_from_playlist(db_playlist: YouTubePlaylist) -> List[VideoId]:

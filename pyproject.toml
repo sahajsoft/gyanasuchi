@@ -13,6 +13,7 @@ modal = "^0.56.4326"
 python-dotenv = "^1.0.0"
 mysql-connector-python = "^8.2.0"
 sqlalchemy = "^2.0.23"
+nanoid = "^2.0.0"
 
 
 [build-system]
