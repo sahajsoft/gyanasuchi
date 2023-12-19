@@ -1,7 +1,8 @@
 import logging
 import os
 
-from sqlalchemy import Column, String, Engine, create_engine, PrimaryKeyConstraint, DateTime
+import nanoid
+from sqlalchemy import Column, String, Engine, create_engine, PrimaryKeyConstraint, DateTime, Float, ForeignKey
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import declarative_base, Session
 
@@ -14,6 +15,7 @@ class YouTubePlaylist(Base):
 
     id = Column(String(40), primary_key=True)
     name = Column(String(100))
+    first_inserted_at_run = Column(DateTime, nullable=False)
 
     def __repr__(self):
         return f'YouTubePlaylist(id="{self.id}", name="{self.name}")'
@@ -22,7 +24,7 @@ class YouTubePlaylist(Base):
 class YouTubePlaylistVideo(Base):
     __tablename__ = "YOUTUBE_VIDEO"
 
-    playlist_id = Column(String(40), primary_key=True)
+    playlist_id = Column(String(40), ForeignKey('YOUTUBE_PLAYLISTS.id'), primary_key=True)
     video_id = Column(String(20), primary_key=True)
     first_inserted_at_run = Column(DateTime, nullable=False)
 
@@ -32,6 +34,24 @@ class YouTubePlaylistVideo(Base):
 
     def __repr__(self):
         return f'YouTubePlaylistVideo(playlist_id="{self.playlist_id}", video_id="{self.video_id}")'
+
+
+class YouTubeTranscriptLine(Base):
+    __tablename__ = "YOUTUBE_TRANSCRIPT_LINE"
+
+    id = Column(String(40), primary_key=True, default=lambda: nanoid.generate(size=12))
+    video_id = Column(String(20), index=True)
+    text = Column(String(1000))
+    start = Column(Float(2), nullable=False)
+    duration = Column(Float(2), nullable=False)
+    first_inserted_at_run = Column(DateTime, nullable=False)
+
+    def __repr__(self):
+        return 'YouTubeTranscriptLine(' \
+               f'video_id="{self.video_id}", ' \
+               f'text="{self.text}", ' \
+               f'start="{self.start}", ' \
+               f'duration="{self.duration}")'
 
 
 def env(key: str, default: str = None) -> str:

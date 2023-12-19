@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from dotenv import load_dotenv
@@ -9,10 +10,12 @@ from gyanasuchi.scrapper.db import YouTubePlaylist, Base, insert_if_not_dupe, db
 
 
 def initiate(engine: Engine, session: Session) -> List[YouTubePlaylist]:
+    run_id = datetime.now()
     Base.metadata.create_all(bind=engine)
     playlists = [
-        YouTubePlaylist(id="PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7", name="DevDay_"),
-        YouTubePlaylist(id="PL1T8fO7ArWleyIqOy37OVXsP4hFXymdOZ", name="LLM Bootcamp - Spring 2023")
+        YouTubePlaylist(id="PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7", name="DevDay_", first_inserted_at_run=run_id),
+        YouTubePlaylist(id="PL1T8fO7ArWleyIqOy37OVXsP4hFXymdOZ", name="LLM Bootcamp - Spring 2023",
+                        first_inserted_at_run=run_id)
     ]
 
     [insert_if_not_dupe(session, playlist) for playlist in playlists]
