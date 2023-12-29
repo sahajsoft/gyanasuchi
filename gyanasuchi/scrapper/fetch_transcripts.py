@@ -8,7 +8,7 @@ from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, No
 
 from gyanasuchi.common import setup_logging
 from gyanasuchi.modal import create_stub
-from gyanasuchi.scrapper.db import YouTubeTranscriptLine, db_engine
+from gyanasuchi.scrapper.db import YouTubeTranscriptLine, YouTubePlaylistVideo, db_engine
 
 stub = create_stub(__name__)
 logger = logging.getLogger(__name__)
@@ -21,7 +21,7 @@ class TranscriptLine(TypedDict):
 
 
 def fetch_transcript(video_id: str) -> List[TranscriptLine]:
-    logger.info(f'fetching transcripts for {video_id}')
+    logger.info(f"fetching transcripts for {video_id}")
     try:
         return YouTubeTranscriptApi.get_transcript(video_id)
     except (TranscriptsDisabled, NoTranscriptFound):
@@ -49,7 +49,18 @@ def main() -> None:
     engine = db_engine()
     run_id = datetime.now()
 
-    video_id = "kqBB-Z-yrcs"
+    # TODO : Add function to fetch transcripts of all videos
+    # TODO : Fix problem with longer videos > 30 min
+    # video_eid = "kqBB-Z-yrcs"
+    playlist_id = (
+        "PL1T8fO7ArWlyIqOy37OVXsP4hFXymdOZ"  # LLM Bootcamp - Spring 2023 playlist
+    )
     with Session(engine) as session:
-        session.add_all(fetch_transcript_if_not_in_db(video_id, run_id, session))
-        session.commit()
+        playlist_id_rows = session.query(YouTubePlaylistVideo).filter_by(
+            playlist_id=playlist_id
+        )
+        for row in playlist_id_rows:
+            session.add_all(
+                fetch_transcript_if_not_in_db(row.video_id, run_id, session)
+            )
+            session.commit()
