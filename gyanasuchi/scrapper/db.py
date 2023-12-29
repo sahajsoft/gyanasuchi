@@ -5,6 +5,7 @@ import nanoid
 from sqlalchemy import Column, String, Engine, create_engine, PrimaryKeyConstraint, DateTime, Float, ForeignKey
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import declarative_base, Session
+from gyanasuchi.common import env
 
 Base = declarative_base()
 logger = logging.getLogger(__name__)
@@ -52,10 +53,6 @@ class YouTubeTranscriptLine(Base):
                f'text="{self.text}", ' \
                f'start="{self.start}", ' \
                f'duration="{self.duration}")'
-
-
-def env(key: str, default: str = None) -> str:
-    return os.environ.get(key, default)
 
 
 def db_engine() -> Engine:
