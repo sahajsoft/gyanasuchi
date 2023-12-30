@@ -1,13 +1,24 @@
 import logging
 import os
+from typing import Any, Iterator
 
 import nanoid
+from dotenv import load_dotenv
 from sqlalchemy import Column, String, Engine, create_engine, PrimaryKeyConstraint, DateTime, Float, ForeignKey
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import declarative_base, Session
 
 Base = declarative_base()
 logger = logging.getLogger(__name__)
+
+
+def typed_str(value: Any) -> str:
+    if value is None:
+        return "None"
+    elif type(value) in [float, int, Iterator]:
+        return str(value)
+
+    return f'"{value}"'
 
 
 class YouTubePlaylist(Base):
@@ -18,7 +29,7 @@ class YouTubePlaylist(Base):
     first_inserted_at_run = Column(DateTime, nullable=False)
 
     def __repr__(self):
-        return f'YouTubePlaylist(id="{self.id}", name="{self.name}")'
+        return f'YouTubePlaylist(id={typed_str(self.id)}, name={typed_str(self.name)})'
 
 
 class YouTubeVideo(Base):
@@ -27,14 +38,12 @@ class YouTubeVideo(Base):
     id = Column(String(20), primary_key=True)
     first_inserted_at_run = Column(DateTime, nullable=False)
     fetched_transcripts_at_run = Column(DateTime, nullable=True)
-    last_failed_transcripts_run = Column(DateTime, nullable=True)
 
     def __repr__(self) -> str:
         return 'YouTubeVideo(' \
-               f'id="{self.id}", ' \
-               f'first_inserted_at_run="{self.first_inserted_at_run}", ' \
-               f'fetched_transcripts_at_run="{self.fetched_transcripts_at_run}", ' \
-               f'last_failed_transcripts_run="{self.last_failed_transcripts_run}")'
+               f'id={typed_str(self.id)}, ' \
+               f'first_inserted_at_run={typed_str(self.first_inserted_at_run)}, ' \
+               f'fetched_transcripts_at_run={typed_str(self.fetched_transcripts_at_run)})'
 
 
 class YouTubePlaylistVideo(Base):
@@ -49,7 +58,7 @@ class YouTubePlaylistVideo(Base):
     )
 
     def __repr__(self):
-        return f'YouTubePlaylistVideo(playlist_id="{self.playlist_id}", video_id="{self.video_id}")'
+        return f'YouTubePlaylistVideo(playlist_id={typed_str(self.playlist_id)}, video_id={typed_str(self.video_id)})'
 
 
 class YouTubeTranscriptLine(Base):
@@ -64,17 +73,18 @@ class YouTubeTranscriptLine(Base):
 
     def __repr__(self):
         return 'YouTubeTranscriptLine(' \
-               f'video_id="{self.video_id}", ' \
-               f'text="{self.text}", ' \
-               f'start="{self.start}", ' \
-               f'duration="{self.duration}")'
+               f'video_id={typed_str(self.video_id)}, ' \
+               f'text={typed_str(self.text)}, ' \
+               f'start={typed_str(self.start)}, ' \
+               f'duration={typed_str(self.duration)})'
 
 
 def env(key: str, default: str = None) -> str:
     return os.environ.get(key, default)
 
 
-def db_engine(echo: bool = True, timeout: int = 20) -> Engine:
+def db_engine(echo: bool = True) -> Engine:
+    load_dotenv()
     user = env("DATABASE_USERNAME")
     password = env("DATABASE_PASSWORD")
     host = env("DATABASE_HOST")
@@ -84,7 +94,6 @@ def db_engine(echo: bool = True, timeout: int = 20) -> Engine:
         url=f"mysql+mysqlconnector://{user}:{password}@{host}:3306/{database_name}",
         echo=echo,
         echo_pool=True,
-        pool_timeout=timeout
     )
 
 
