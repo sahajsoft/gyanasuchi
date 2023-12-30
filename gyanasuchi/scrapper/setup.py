@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List
 
-from dotenv import load_dotenv
 from sqlalchemy import Engine
 from sqlalchemy.orm import Session
 
@@ -24,7 +23,6 @@ def initiate(engine: Engine, session: Session) -> List[YouTubePlaylist]:
 
 
 if __name__ == "__main__":
-    load_dotenv()
     setup_logging()
     e = db_engine()
 

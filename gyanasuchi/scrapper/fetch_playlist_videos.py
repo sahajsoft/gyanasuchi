@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import List, Dict, Iterator
 
-from dotenv import load_dotenv
 from pytube import Playlist
 from sqlalchemy.orm import Session
 
@@ -52,7 +51,6 @@ async def fetch_videos_for_playlist(playlists: Iterator[YouTubePlaylist]) -> Pla
 
 @stub.local_entrypoint()
 def main() -> None:
-    load_dotenv()
     setup_logging()
     engine = db_engine()
     run_id = datetime.now()
