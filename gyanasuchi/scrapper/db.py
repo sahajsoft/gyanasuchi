@@ -2,7 +2,13 @@ import logging
 from pathlib import Path
 
 from modal import NetworkFileSystem
-from peewee import SqliteDatabase, Model, FixedCharField, DateTimeField, ForeignKeyField, ManyToManyField, FloatField
+from peewee import DateTimeField
+from peewee import FixedCharField
+from peewee import FloatField
+from peewee import ForeignKeyField
+from peewee import ManyToManyField
+from peewee import Model
+from peewee import SqliteDatabase
 
 logger = logging.getLogger(__name__)
 data_volume_dir = "/data"
@@ -25,11 +31,11 @@ class YouTubeVideo(BaseModel):
     id = FixedCharField(20, primary_key=True)
     first_inserted_at_run = DateTimeField()
     fetched_transcripts_at_run = DateTimeField(null=True)
-    playlists = ManyToManyField(YouTubePlaylist, backref='videos')
+    playlists = ManyToManyField(YouTubePlaylist, backref="videos")
 
 
 class YouTubeTranscriptLine(BaseModel):
-    video = ForeignKeyField(YouTubeVideo, backref='transcript_lines')
+    video = ForeignKeyField(YouTubeVideo, backref="transcript_lines")
     text = FixedCharField(1000)
     start = FloatField()
     duration = FloatField()

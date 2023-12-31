@@ -1,14 +1,19 @@
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List, Dict, Iterator
+from typing import Dict
+from typing import List
 
 from peewee import IntegrityError
-from pytube import Playlist, YouTube
+from pytube import Playlist
+from pytube import YouTube
 
 from gyanasuchi.common import setup_logging
-from gyanasuchi.modal import create_stub, nfs_mapping
-from gyanasuchi.scrapper.db import YouTubePlaylist, YouTubeVideo
+from gyanasuchi.modal import create_stub
+from gyanasuchi.modal import nfs_mapping
+from gyanasuchi.scrapper.db import YouTubePlaylist
+from gyanasuchi.scrapper.db import YouTubeVideo
 
 
 @dataclass
@@ -25,13 +30,21 @@ PlaylistToVideos = Dict[PlaylistId, List[VideoDetails]]
 
 
 def _videos_from_playlist(db_playlist: YouTubePlaylist) -> List[VideoDetails]:
-    yt_playlist = Playlist(f'https://www.youtube.com/playlist?list={db_playlist.id}')
-    logger.info(f'Fetching all videos from playlist named {yt_playlist.title} ({db_playlist.name})')
+    yt_playlist = Playlist(f"https://www.youtube.com/playlist?list={db_playlist.id}")
+    logger.info(
+        f"Fetching all videos from playlist named {yt_playlist.title} ({db_playlist.name})",
+    )
 
-    return [VideoDetails(video_url.split('v=')[1], YouTube(video_url).title) for video_url in yt_playlist.video_urls]
+    return [
+        VideoDetails(video_url.split("v=")[1], YouTube(video_url).title)
+        for video_url in yt_playlist.video_urls
+    ]
 
 
-def _add_youtube_videos_from_playlist(playlist_videos: PlaylistToVideos, run_id: datetime):
+def _add_youtube_videos_from_playlist(
+    playlist_videos: PlaylistToVideos,
+    run_id: datetime,
+):
     [
         create_or_get_video(video_detail, playlist_id, run_id)
         for playlist_id, video_details in playlist_videos.items()
@@ -39,7 +52,11 @@ def _add_youtube_videos_from_playlist(playlist_videos: PlaylistToVideos, run_id:
     ]
 
 
-def create_or_get_video(vid_details: VideoDetails, playlist_id: str, run_id: datetime) -> YouTubeVideo:
+def create_or_get_video(
+    vid_details: VideoDetails,
+    playlist_id: str,
+    run_id: datetime,
+) -> YouTubeVideo:
     existing_video: YouTubeVideo = YouTubeVideo.get_or_none(id=vid_details.id)
 
     if existing_video is not None:
@@ -48,27 +65,33 @@ def create_or_get_video(vid_details: VideoDetails, playlist_id: str, run_id: dat
             existing_video.playlists.add(playlist_id)
             logger.info(f"Added playlist ID {playlist_id} to {vid_details.id=}")
         except IntegrityError:
-            logger.debug(f"{playlist_id=} already mapped to {vid_details.id=}. Ignoring the mapping operation")
+            logger.debug(
+                f"{playlist_id=} already mapped to {vid_details.id=}. Ignoring the mapping operation",
+            )
 
         return existing_video
 
     return created_video(vid_details, playlist_id, run_id)
 
 
-def created_video(vid_details: VideoDetails, playlist_id: str, run_id: datetime) -> YouTubeVideo:
+def created_video(
+    vid_details: VideoDetails,
+    playlist_id: str,
+    run_id: datetime,
+) -> YouTubeVideo:
     logger.info(f"Creating {vid_details.id=} at {run_id=} for {playlist_id=}")
-    video: YouTubeVideo = YouTubeVideo.create(id=vid_details.id, title=vid_details.title,
-                                              first_inserted_at_run=run_id)
+    video: YouTubeVideo = YouTubeVideo.create(
+        id=vid_details.id,
+        title=vid_details.title,
+        first_inserted_at_run=run_id,
+    )
     video.playlists.add(playlist_id)
     video.save()
     return video
 
 
 def fetch_videos_for_playlist(playlists: Iterator[YouTubePlaylist]) -> PlaylistToVideos:
-    return {
-        playlist.id: _videos_from_playlist(playlist)
-        for playlist in playlists
-    }
+    return {playlist.id: _videos_from_playlist(playlist) for playlist in playlists}
 
 
 @stub.function(network_file_systems=nfs_mapping())
