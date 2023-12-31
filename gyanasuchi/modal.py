@@ -1,8 +1,11 @@
 from typing import Dict
 
-from modal import Stub, Image, Volume, NetworkFileSystem
+from modal import Image
+from modal import NetworkFileSystem
+from modal import Stub
 
-from gyanasuchi.scrapper.db import data_volume_dir, data_volume
+from gyanasuchi.scrapper.db import data_volume
+from gyanasuchi.scrapper.db import data_volume_dir
 
 
 def create_stub(name: str) -> Stub:
@@ -13,9 +16,9 @@ def create_stub(name: str) -> Stub:
             "python3-dev",
             "default-libmysqlclient-dev",
             "build-essential",
-            "pkg-config"
+            "pkg-config",
         )
-        .poetry_install_from_file('pyproject.toml')
+        .poetry_install_from_file("pyproject.toml"),
     )
 
 

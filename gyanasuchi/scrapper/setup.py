@@ -1,10 +1,15 @@
 import logging
 from datetime import datetime
-from typing import List, TypedDict
+from typing import List
+from typing import TypedDict
 
 from gyanasuchi.common import setup_logging
-from gyanasuchi.modal import create_stub, nfs_mapping
-from gyanasuchi.scrapper.db import YouTubePlaylist, raw_db, YouTubeVideo, YouTubeTranscriptLine
+from gyanasuchi.modal import create_stub
+from gyanasuchi.modal import nfs_mapping
+from gyanasuchi.scrapper.db import raw_db
+from gyanasuchi.scrapper.db import YouTubePlaylist
+from gyanasuchi.scrapper.db import YouTubeTranscriptLine
+from gyanasuchi.scrapper.db import YouTubeVideo
 
 logger = logging.getLogger(__name__)
 stub = create_stub(__name__)
@@ -20,7 +25,9 @@ def initiate(playlists: List[Playlists]) -> List[YouTubePlaylist]:
     setup_logging()
     run_id = datetime.now()
     models_to_create = [
-        YouTubePlaylist, YouTubeVideo, YouTubeVideo.playlists.get_through_model(),
+        YouTubePlaylist,
+        YouTubeVideo,
+        YouTubeVideo.playlists.get_through_model(),
         YouTubeTranscriptLine,
     ]
 
@@ -38,14 +45,23 @@ def initiate(playlists: List[Playlists]) -> List[YouTubePlaylist]:
 
     logger.info("Creating playlists")
     return [
-        YouTubePlaylist.create(id=playlist["id"], name=playlist["name"], first_inserted_at_run=run_id)
+        YouTubePlaylist.create(
+            id=playlist["id"],
+            name=playlist["name"],
+            first_inserted_at_run=run_id,
+        )
         for playlist in playlists
     ]
 
 
 @stub.local_entrypoint()
 def main() -> None:
-    initiate.remote([
-        {"id": "PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7", "name": "DevDay_"},
-        {"id": "PL1T8fO7ArWleyIqOy37OVXsP4hFXymdOZ", "name": "LLM Bootcamp - Spring 2023"},
-    ])
+    initiate.remote(
+        [
+            {"id": "PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7", "name": "DevDay_"},
+            {
+                "id": "PL1T8fO7ArWleyIqOy37OVXsP4hFXymdOZ",
+                "name": "LLM Bootcamp - Spring 2023",
+            },
+        ],
+    )
