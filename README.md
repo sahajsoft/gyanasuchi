@@ -8,7 +8,7 @@ This is a bot that will collect information from various sources, process it and
 
 ```commandline
 poetry install
-poetry run python gyanasuchi/scrapper/setup.py
+poetry run modal run gyanasuchi/scrapper/setup.py
 ```
 
 ## Run
