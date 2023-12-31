@@ -47,7 +47,6 @@ def fetch_transcripts_if_not_in_db(video_id: str, run_id: datetime) -> List[YouT
     ]
 
 
-@stub.function(network_file_systems=nfs_mapping())
 def process_video(video_id: str, run_id: datetime) -> TranscriptUpdateStatus:
     setup_logging()
     batch_size = 100
@@ -71,11 +70,7 @@ def main() -> None:
     videos_without_transcripts = YouTubeVideo.select().where(YouTubeVideo.fetched_transcripts_at_run.is_null())
 
     logger.info(f"fetched {len(videos_without_transcripts)} videos which need transcripts")
-    # logger.info([process_video(video.id, run_id) for video in videos_without_transcripts])
-    logger.info(list(process_video.map(
-        map(lambda v: v.id, videos_without_transcripts),
-        kwargs={'run_id': run_id}
-    )))
+    logger.info([process_video(video.id, run_id) for video in videos_without_transcripts])
 
 
 @stub.local_entrypoint()
