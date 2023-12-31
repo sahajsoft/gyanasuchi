@@ -1,4 +1,8 @@
-from modal import Stub, Image
+from typing import Dict
+
+from modal import Stub, Image, Volume, NetworkFileSystem
+
+from gyanasuchi.scrapper.db import data_volume_dir, data_volume
 
 
 def create_stub(name: str) -> Stub:
@@ -13,3 +17,7 @@ def create_stub(name: str) -> Stub:
         )
         .poetry_install_from_file('pyproject.toml')
     )
+
+
+def nfs_mapping() -> Dict[str, NetworkFileSystem]:
+    return {data_volume_dir: data_volume}
