@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-from typing import Any, Iterator
 
 from modal import NetworkFileSystem
 from peewee import SqliteDatabase, Model, FixedCharField, DateTimeField, ForeignKeyField, ManyToManyField, FloatField
@@ -9,15 +8,6 @@ logger = logging.getLogger(__name__)
 data_volume_dir = "/data"
 data_volume = NetworkFileSystem.persisted("data")
 raw_db = SqliteDatabase(Path(data_volume_dir, "raw.db"))
-
-
-def typed_str(value: Any | None) -> str:
-    if value is None:
-        return "None"
-    elif type(value) in [float, int, Iterator]:
-        return str(value)
-
-    return f'"{value}"'
 
 
 class BaseModel(Model):
