@@ -24,6 +24,9 @@ def initiate(playlists: List[Playlists]) -> List[YouTubePlaylist]:
         YouTubeTranscriptLine,
     ]
 
+    logger.info("Removing existing database")
+    raw_db.database.unlink()
+
     logger.info("Connecting to the database")
     raw_db.connect()
 
