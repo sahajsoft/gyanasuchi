@@ -91,8 +91,6 @@ class QuestionAnswerPipeline:
         self.logger.info(f"Number of documents: {len(documents)}")
         self.logger.info(f"Embeddings model: {self.embeddings_model}")
         self.logger.info(f"Collection name: {self.collection_name}")
-        self.logger.info(f'env("QDRANT_URL"): {env("QDRANT_URL")}')
-        self.logger.info(f'env("QDRANT_API_KEY"): {env("QDRANT_API_KEY")}')
         try:
             qdrant_db = Qdrant.from_documents(
                 documents=documents,
