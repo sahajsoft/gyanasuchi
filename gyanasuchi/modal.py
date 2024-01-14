@@ -4,8 +4,6 @@ from modal import Image
 from modal import NetworkFileSystem
 from modal import Stub
 
-from gyanasuchi.scrapper.db import artifacts_dir
-from gyanasuchi.scrapper.db import artifacts_volume
 from gyanasuchi.scrapper.db import data_volume
 from gyanasuchi.scrapper.db import data_volume_dir
 
@@ -25,4 +23,4 @@ def create_stub(name: str) -> Stub:
 
 
 def nfs_mapping() -> Dict[str, NetworkFileSystem]:
-    return {data_volume_dir: data_volume, artifacts_dir: artifacts_volume}
+    return {data_volume_dir: data_volume}
