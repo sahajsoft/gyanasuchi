@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import datetime
 from typing import List
 from typing import TypedDict
@@ -31,8 +32,9 @@ def initiate(playlists: List[Playlists]) -> List[YouTubePlaylist]:
         YouTubeTranscriptLine,
     ]
 
-    logger.info("Removing existing database")
-    raw_db.database.unlink()
+    if os.path.exists(raw_db.database):
+        logger.info("Removing existing database")
+        raw_db.database.unlink()
 
     logger.info("Connecting to the database")
     raw_db.connect()
