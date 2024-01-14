@@ -17,11 +17,6 @@ poetry run modal run gyanasuchi/scrapper/fetch_playlist_videos.py
 poetry run modal run gyanasuchi/scrapper/fetch_transcripts.py
 ```
 
-## fetch transcripts for all videos from DB
-```commandline
-poetry run modal run gyanasuchi/peewe_db_dataloader/fetch_data_from_db.py
-```
-
 ## run a FastAPI app - Baseline RAG with Quadrant Cloud DB **on remote**
 ```commandline
 poetry run modal run gyanasuchi/app/main.py
