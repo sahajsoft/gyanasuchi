@@ -12,8 +12,16 @@ pytube = "^15.0.0"
 modal = "^0.56.4326"
 peewee = "^3.17.0"
 pre-commit = "^3.6.0"
+load-dotenv = "^0.1.0"
+tqdm = "^4.66.1"
+langchain = "^0.1.0"
+qdrant-client = "^1.7.0"
+uvicorn = "^0.25.0"
+sentence-transformers = "^2.2.2"
+openai = "^1.7.2"
 slack-bolt = "^1.18.1"
 python-dotenv = "^1.0.0"
+
 
 [build-system]
 requires = ["poetry-core"]
