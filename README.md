@@ -21,7 +21,7 @@ poetry run modal run gyanasuchi/scrapper/fetch_transcripts.py
 ## run a FastAPI app - Baseline RAG with Quadrant Cloud DB **on remote**
 
 ```commandline
-poetry run modal run gyanasuchi/app/main.py
+poetry run modal serve gyanasuchi/app/main.py
 ```
 
 ### test app at FastAPI - eg. - <https://ajinkyak-sahaj--gyanasuchi-app-main-fastapi-app-dev.modal.run/docs> (replace with your app url)
