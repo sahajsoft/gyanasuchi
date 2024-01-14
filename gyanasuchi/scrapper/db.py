@@ -15,6 +15,9 @@ data_volume_dir = "/data"
 data_volume = NetworkFileSystem.persisted("data")
 raw_db = SqliteDatabase(Path(data_volume_dir, "raw.db"))
 
+artifacts_dir = "/artifacts"
+artifacts_volume = NetworkFileSystem.persisted("artifacts")
+
 
 class BaseModel(Model):
     class Meta:
