@@ -5,14 +5,13 @@ import warnings
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import DirectoryLoader
-from langchain.document_loaders import TextLoader
 from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Qdrant
 from qdrant_client import QdrantClient
 
+from .fetch_data_from_db import get_transcipts_data
 from gyanasuchi.common import env
 from gyanasuchi.common import setup_logging
 
@@ -53,8 +52,8 @@ class QuestionAnswerPipeline:
         )
 
     @staticmethod
-    def load_document_data(path: str) -> list:
-        return DirectoryLoader(path, glob="**/*.txt", loader_cls=TextLoader).load()
+    def load_document_data() -> list:
+        return get_transcipts_data()
 
     @staticmethod
     def clean_data(documents: list) -> list:

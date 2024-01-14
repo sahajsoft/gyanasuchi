@@ -18,8 +18,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-DATA_DUMP_PATH = "/artifacts/transcripts"
-
 origins = [
     "http://localhost:8000",
     "http://localhost:3000",
@@ -50,7 +48,7 @@ async def root():
 async def load_database():
     try:
         pipeline = QuestionAnswerPipeline(collection_name="youtube_transcripts")
-        documents = pipeline.load_document_data(DATA_DUMP_PATH)
+        documents = pipeline.load_document_data()
         cleaned_documents = pipeline.clean_data(documents)
         text_chunks = pipeline.generate_text_chunks(cleaned_documents)
         embeddings_model = pipeline.load_embeddings()
@@ -86,8 +84,8 @@ async def qa_retrieve(input_query: UserQuery):
 
 
 @stub.function(
-    network_file_systems=nfs_mapping(),
     secret=modal.Secret.from_name("gyanasuchi-secret"),
+    network_file_systems=nfs_mapping(),
 )
 @asgi_app()
 def fastapi_app():
