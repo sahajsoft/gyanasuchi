@@ -1,4 +1,6 @@
 from builtins import Exception
+from typing import Any
+from typing import Dict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -34,16 +36,20 @@ async def events_handler(request: Request):
 
 
 @slack_app.event("app_mention")
-def handle_app_mentions(body, say: Say):
+def handle_app_mentions(body: Dict[str, Any], say: Say):
     message = body["event"]["text"]
-    print(f"Requested question through a mention with {message=}")
+    thread_ts = body["event"]["thread_ts"]
+    print(
+        f"Requested question through a mention with {message=} and a response is to be sent to {thread_ts=}",
+    )
     pipeline = QuestionAnswerPipeline(collection_name="youtube_transcripts")
 
     try:
-        say(pipeline.qa_from_qdrant(message))
+        say(pipeline.qa_from_qdrant(message), thread_ts=thread_ts)
     except Exception:
         say(
             "Not ready to provide _gyana_ yet but I will be soon! Hold your :horse: :horse:",
+            thread_ts=thread_ts,
         )
 
 
@@ -53,7 +59,7 @@ def handle_message(body, say) -> None:
     say(f"got a message {body}")
 
 
-@stub.function()
+@stub.function(keep_warm=1)
 @asgi_app()
 def slack_responder_app() -> FastAPI:
     return web_app
