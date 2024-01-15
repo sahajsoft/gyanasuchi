@@ -1,6 +1,5 @@
 import logging
 import re
-import warnings
 from typing import List
 from typing import Type
 
@@ -18,8 +17,6 @@ from gyanasuchi.app.fetch_data_from_db import fetch_transcript_from_db
 from gyanasuchi.common import env
 from gyanasuchi.common import setup_logging
 from gyanasuchi.scrapper.db import YouTubeVideo
-
-warnings.filterwarnings("ignore")
 
 template = """Use the following pieces of information to answer the users question.
 Include every piece of information in the answer. Do not miss anything from the given context to include in answer.
