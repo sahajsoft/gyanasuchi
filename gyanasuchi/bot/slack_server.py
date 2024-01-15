@@ -28,6 +28,7 @@ app_handler = SlackRequestHandler(slack_app)
 
 @web_app.get("/")
 async def simple_home_responder():
+    print("Container has been warmed up")
     return "Hello! You shouldn't be here :)"
 
 
@@ -47,17 +48,12 @@ def handle_app_mentions(body: Dict[str, Any], say: Say):
 
     try:
         say(pipeline.qa_from_qdrant(message), thread_ts=thread_ts)
-    except Exception:
+    except Exception as e:
+        print(f"QA pipeline execution failed {e}")
         say(
             "Not ready to provide _gyana_ yet but I will be soon! Hold your :horse: :horse:",
             thread_ts=thread_ts,
         )
-
-
-@slack_app.event("message")
-def handle_message(body, say) -> None:
-    print(f"message {body=}")
-    say(f"got a message {body}")
 
 
 @stub.function(keep_warm=1, network_file_systems=nfs_mapping())
