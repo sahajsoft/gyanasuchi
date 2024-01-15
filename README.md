@@ -18,16 +18,9 @@ poetry run modal run gyanasuchi/scrapper/fetch_playlist_videos.py
 poetry run modal run gyanasuchi/scrapper/fetch_transcripts.py
 ```
 
-## run a FastAPI app - Baseline RAG with Quadrant Cloud DB **on remote**
+## Deploy slackbot
 
 ```commandline
-poetry run modal serve gyanasuchi/app/main.py
+poetry run modal deploy gyanasuchi/bot/slack_server.py
 ```
-
-### test app at FastAPI - eg. - <https://ajinkyak-sahaj--gyanasuchi-app-main-fastapi-app-dev.modal.run/docs> (replace with your app url)
-
-_Following keys should be there in modal secret - <https://modal.com/docs/guide/secrets#using-secrets>
-
-* OPENAI_API_KEY
-* QDRANT_API_KEY
-* QDRANT_URL
+This requires a list of secrets to be added to your modal account that have been listed under .env.example

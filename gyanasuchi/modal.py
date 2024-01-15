@@ -9,7 +9,7 @@ from gyanasuchi.scrapper.db import data_volume
 from gyanasuchi.scrapper.db import data_volume_dir
 
 
-def create_stub(name: str) -> Stub:
+def create_stub(name: str, *secret_names: str) -> Stub:
     return Stub(
         name=name,
         image=Image.debian_slim()
@@ -20,7 +20,7 @@ def create_stub(name: str) -> Stub:
             "pkg-config",
         )
         .poetry_install_from_file("pyproject.toml"),
-        secrets=[Secret.from_name("slack-gyanasuchi")],
+        secrets=[Secret.from_name(name) for name in secret_names],
     )
 
 
