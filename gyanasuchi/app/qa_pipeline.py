@@ -2,6 +2,7 @@ import logging
 import re
 import warnings
 from typing import List
+from typing import Type
 
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
@@ -35,8 +36,8 @@ setup_logging()
 class QuestionAnswerPipeline:
     def __init__(
         self,
-        collection_name,
-        embeddings_model="sentence-transformers/all-MiniLM-L6-v2",
+        collection_name: str,
+        embeddings_model: str = "sentence-transformers/all-MiniLM-L6-v2",
     ):
         self.qdrant_client = QdrantClient(
             url=env("QDRANT_URL"),
@@ -85,7 +86,7 @@ class QuestionAnswerPipeline:
         documents: List[Document],
         chunk_size: int = 500,
         chunk_overlap: int = 10,
-        splitter=RecursiveCharacterTextSplitter,
+        splitter: Type[RecursiveCharacterTextSplitter] = RecursiveCharacterTextSplitter,
     ) -> List[Document]:
         text_splitter = splitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         return text_splitter.split_documents(documents)
