@@ -9,12 +9,11 @@ from gyanasuchi.modal import create_stub
 from gyanasuchi.modal import nfs_mapping
 
 stub = create_stub(__name__, "qdrant-gyanasuchi")
-setup_logging()
 logger = logging.getLogger(__name__)
 
 
 @stub.function(network_file_systems=nfs_mapping())
-async def load_database(collection_name: str):
+async def create_and_push_data_into_vector_db(collection_name: str):
     pipeline = QuestionAnswerPipeline(collection_name=collection_name)
     text_chunks = generate_text_chunks(clean_data(load_document_data()))
 
@@ -27,4 +26,5 @@ async def load_database(collection_name: str):
 
 @stub.local_entrypoint()
 def main() -> None:
-    load_database.remote("youtube_transcripts")
+    setup_logging()
+    create_and_push_data_into_vector_db.remote("youtube_transcripts")

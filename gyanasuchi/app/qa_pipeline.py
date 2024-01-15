@@ -64,6 +64,7 @@ class QuestionAnswerPipeline:
         self.logger.info(f"Embeddings model: {self.embeddings_model}")
         self.logger.info(f"Collection name: {self.collection_name}")
         try:
+            # TODO: Use client.update_collection_aliases to rename and make this operation 0 downtime
             qdrant_db = Qdrant.from_documents(
                 documents=documents,
                 embedding=embeddings,
@@ -72,6 +73,7 @@ class QuestionAnswerPipeline:
                 api_key=env("QDRANT_API_KEY"),
                 force_recreate=recreate_collection,
             )
+
             self.logger.info("Qdrant database has been created successfully!!")
             return qdrant_db
         except Exception as e:
