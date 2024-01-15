@@ -5,18 +5,18 @@ from typing import List
 
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Qdrant
+from langchain_community.chat_models import ChatOpenAI
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores.qdrant import Qdrant
 from langchain_core.documents import Document
+from langchain_core.prompts import PromptTemplate
 from qdrant_client import QdrantClient
 
-from ..scrapper.db import YouTubeVideo
-from .fetch_data_from_db import fetch_transcript_from_db
+from gyanasuchi.app.fetch_data_from_db import fetch_transcript_from_db
 from gyanasuchi.common import env
 from gyanasuchi.common import setup_logging
+from gyanasuchi.scrapper.db import YouTubeVideo
 
 warnings.filterwarnings("ignore")
 
