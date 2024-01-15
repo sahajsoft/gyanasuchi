@@ -47,50 +47,6 @@ class QuestionAnswerPipeline:
         self.collection_name = collection_name
         self.logger = logging.getLogger(__name__)
 
-    @staticmethod
-    def load_language_model(temperature: int = 0) -> ChatOpenAI:
-        return ChatOpenAI(
-            openai_api_key=env("OPENAI_API_KEY"),
-            model_name="gpt-3.5-turbo-16k",
-            temperature=temperature,
-        )
-
-    @staticmethod
-    def load_document_data() -> List[Document]:
-        all_video_ids = YouTubeVideo.select(YouTubeVideo.id)
-        documents = []
-        for video_id in all_video_ids:
-            transcript_available, transcript = fetch_transcript_from_db(video_id)
-            if transcript_available:
-                # video_title = fetch_video_title_from_db(video_id)
-                video_url = f"https://www.youtube.com/watch?v={video_id}"
-                # document = Document(page_content=transcript, metadata={"source": video_url, "title": video_title, "video_id": video_id})
-                document = Document(
-                    page_content=transcript,
-                    metadata={"source": video_url, "video_id": str(video_id)},
-                )
-                documents.append(document)
-        return documents
-
-    @staticmethod
-    def clean_data(documents: List[Document]) -> List[Document]:
-        cleaned_documents = []
-        for document in documents:
-            # Remove extra spaces and newlines
-            document.page_content = re.sub(r"\s+", " ", document.page_content.strip())
-            cleaned_documents.append(document)
-        return cleaned_documents
-
-    @staticmethod
-    def generate_text_chunks(
-        documents: List[Document],
-        chunk_size: int = 500,
-        chunk_overlap: int = 10,
-        splitter: Type[RecursiveCharacterTextSplitter] = RecursiveCharacterTextSplitter,
-    ) -> List[Document]:
-        text_splitter = splitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-        return text_splitter.split_documents(documents)
-
     def load_embeddings(self, device: str = "cpu") -> HuggingFaceEmbeddings:
         return HuggingFaceEmbeddings(
             model_name=self.embeddings_model,
@@ -132,7 +88,7 @@ class QuestionAnswerPipeline:
                 embeddings=self.load_embeddings(),
             )
             qa = RetrievalQA.from_chain_type(
-                llm=self.load_language_model(),
+                llm=load_language_model(),
                 chain_type="stuff",
                 retriever=vector_store.as_retriever(
                     search_type="similarity",
@@ -148,3 +104,48 @@ class QuestionAnswerPipeline:
         except Exception as e:
             self.logger.error(f"Error querying Qdrant database: {e}")
             raise
+
+
+def load_language_model(temperature: int = 0) -> ChatOpenAI:
+    return ChatOpenAI(
+        openai_api_key=env("OPENAI_API_KEY"),
+        model_name="gpt-3.5-turbo-16k",
+        temperature=temperature,
+    )
+
+
+def load_document_data() -> List[Document]:
+    all_video_ids = YouTubeVideo.select(YouTubeVideo.id)
+    documents = []
+    for video_id in all_video_ids:
+        transcript_available, transcript = fetch_transcript_from_db(video_id)
+        if transcript_available:
+            # video_title = fetch_video_title_from_db(video_id)
+            video_url = f"https://www.youtube.com/watch?v={video_id}"
+            # document = Document(page_content=transcript, metadata={"source": video_url, "title": video_title,
+            # "video_id": video_id})
+            document = Document(
+                page_content=transcript,
+                metadata={"source": video_url, "video_id": str(video_id)},
+            )
+            documents.append(document)
+    return documents
+
+
+def clean_data(documents: List[Document]) -> List[Document]:
+    cleaned_documents = []
+    for document in documents:
+        # Remove extra spaces and newlines
+        document.page_content = re.sub(r"\s+", " ", document.page_content.strip())
+        cleaned_documents.append(document)
+    return cleaned_documents
+
+
+def generate_text_chunks(
+    documents: List[Document],
+    chunk_size: int = 500,
+    chunk_overlap: int = 10,
+    splitter: Type[RecursiveCharacterTextSplitter] = RecursiveCharacterTextSplitter,
+) -> List[Document]:
+    text_splitter = splitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    return text_splitter.split_documents(documents)

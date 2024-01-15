@@ -16,6 +16,7 @@ poetry run modal run gyanasuchi/scrapper/setup.py
 ```commandline
 poetry run modal run gyanasuchi/scrapper/fetch_playlist_videos.py
 poetry run modal run gyanasuchi/scrapper/fetch_transcripts.py
+poetry run modal run gyanasuchi/scrapper/push_to_qdrant.py
 ```
 
 ## Deploy slackbot
