@@ -5,7 +5,7 @@ from typing import Dict
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi import Request
-from modal.functions import asgi_app
+from modal import asgi_app
 from slack_bolt import Ack
 from slack_bolt import App
 from slack_bolt import Say
