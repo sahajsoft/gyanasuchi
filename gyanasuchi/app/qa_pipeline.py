@@ -62,49 +62,42 @@ class QuestionAnswerPipeline:
         self.logger.info(f"Number of documents: {len(documents)}")
         self.logger.info(f"Embeddings model: {self.embeddings_model}")
         self.logger.info(f"Collection name: {self.collection_name}")
-        try:
-            # TODO: Use client.update_collection_aliases to rename and make this operation 0 downtime
-            qdrant_db = Qdrant.from_documents(
-                documents=documents,
-                embedding=embeddings,
-                collection_name=self.collection_name,
-                url=env("QDRANT_URL"),
-                api_key=env("QDRANT_API_KEY"),
-                force_recreate=recreate_collection,
-            )
 
-            self.logger.info("Qdrant database has been created successfully!!")
-            return qdrant_db
-        except Exception as e:
-            self.logger.error(f"Error creating Qdrant database: {e}")
-            raise
+        # TODO: Use client.update_collection_aliases to rename and make this operation 0 downtime
+        qdrant_db = Qdrant.from_documents(
+            documents=documents,
+            embedding=embeddings,
+            collection_name=self.collection_name,
+            url=env("QDRANT_URL"),
+            api_key=env("QDRANT_API_KEY"),
+            force_recreate=recreate_collection,
+        )
+
+        self.logger.info("Qdrant database has been created successfully!!")
+        return qdrant_db
 
     def qa_from_qdrant(self, query: str) -> str:
         self.logger.info(f"Querying Qdrant with query: {query}")
-        try:
-            prompt_template = PromptTemplate.from_template(template)
-            vector_store = Qdrant(
-                client=self.qdrant_client,
-                collection_name=self.collection_name,
-                embeddings=self.load_embeddings(),
-            )
-            qa = RetrievalQA.from_chain_type(
-                llm=load_language_model(),
-                chain_type="stuff",
-                retriever=vector_store.as_retriever(
-                    search_type="similarity",
-                    search_kwargs={"k": 5},
-                ),
-                return_source_documents=True,
-                chain_type_kwargs={"prompt": prompt_template},
-            )
-            response = qa({"query": query})
-            result = response["result"]
-            self.logger.info(f"Response from Qdrant: {response}")
-            return result
-        except Exception as e:
-            self.logger.error(f"Error querying Qdrant database: {e}")
-            raise
+        prompt_template = PromptTemplate.from_template(template)
+        vector_store = Qdrant(
+            client=self.qdrant_client,
+            collection_name=self.collection_name,
+            embeddings=self.load_embeddings(),
+        )
+        qa = RetrievalQA.from_chain_type(
+            llm=load_language_model(),
+            chain_type="stuff",
+            retriever=vector_store.as_retriever(
+                search_type="similarity",
+                search_kwargs={"k": 5},
+            ),
+            return_source_documents=True,
+            chain_type_kwargs={"prompt": prompt_template},
+        )
+        response = qa({"query": query})
+        result = response["result"]
+        self.logger.info(f"Response from Qdrant: {response}")
+        return result
 
 
 def load_language_model(temperature: int = 0) -> ChatOpenAI:
