@@ -14,6 +14,7 @@ from langchain_core.prompts import PromptTemplate
 from qdrant_client import QdrantClient
 
 from gyanasuchi.app.fetch_data_from_db import fetch_transcript_from_db
+from gyanasuchi.common import data_volume_dir
 from gyanasuchi.common import env
 from gyanasuchi.common import setup_logging
 from gyanasuchi.scrapper.db import YouTubeVideo
@@ -48,6 +49,7 @@ class QuestionAnswerPipeline:
         return HuggingFaceEmbeddings(
             model_name=self.embeddings_model,
             model_kwargs={"device": device},
+            cache_folder=f"{data_volume_dir}/embeddings/",
         )
 
     def create_qdrant_database(

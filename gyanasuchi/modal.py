@@ -5,8 +5,8 @@ from modal import NetworkFileSystem
 from modal import Secret
 from modal import Stub
 
+from gyanasuchi.common import data_volume_dir
 from gyanasuchi.scrapper.db import data_volume
-from gyanasuchi.scrapper.db import data_volume_dir
 
 
 def create_stub(name: str, *secret_names: str) -> Stub:

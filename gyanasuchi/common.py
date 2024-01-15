@@ -1,6 +1,8 @@
 import logging
 import os
 
+data_volume_dir = "/data"
+
 
 def setup_logging() -> None:
     return logging.basicConfig(

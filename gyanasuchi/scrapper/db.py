@@ -10,8 +10,9 @@ from peewee import ManyToManyField
 from peewee import Model
 from peewee import SqliteDatabase
 
+from gyanasuchi.common import data_volume_dir
+
 logger = logging.getLogger(__name__)
-data_volume_dir = "/data"
 data_volume = NetworkFileSystem.persisted("data")
 raw_db = SqliteDatabase(Path(data_volume_dir, "raw.db"))
 

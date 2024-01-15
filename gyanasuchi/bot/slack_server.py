@@ -12,6 +12,7 @@ from slack_bolt.adapter.fastapi import SlackRequestHandler
 
 from gyanasuchi.app.qa_pipeline import QuestionAnswerPipeline
 from gyanasuchi.modal import create_stub
+from gyanasuchi.modal import nfs_mapping
 
 load_dotenv()
 stub = create_stub(
@@ -38,7 +39,7 @@ async def events_handler(request: Request):
 @slack_app.event("app_mention")
 def handle_app_mentions(body: Dict[str, Any], say: Say):
     message = body["event"]["text"]
-    thread_ts = body["event"]["thread_ts"]
+    thread_ts = body["event"].get("thread_ts")
     print(
         f"Requested question through a mention with {message=} and a response is to be sent to {thread_ts=}",
     )
@@ -59,7 +60,7 @@ def handle_message(body, say) -> None:
     say(f"got a message {body}")
 
 
-@stub.function(keep_warm=1)
+@stub.function(keep_warm=1, network_file_systems=nfs_mapping())
 @asgi_app()
 def slack_responder_app() -> FastAPI:
     return web_app
