@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from langchain.schema.document import Document
 from peewee import DoesNotExist
@@ -33,7 +34,7 @@ def fetch_video_title_from_db(video_id: str) -> str:
         return ""
 
 
-def get_transcipts_data() -> list[Document]:
+def get_transcipts_data() -> List[Document]:
     all_video_ids = YouTubeVideo.select(YouTubeVideo.id)
     documents = []
 

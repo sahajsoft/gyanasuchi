@@ -1,6 +1,7 @@
 import logging
 import re
 import warnings
+from typing import List
 
 from dotenv import load_dotenv
 from langchain.chains import RetrievalQA
@@ -9,9 +10,11 @@ from langchain.embeddings import HuggingFaceEmbeddings
 from langchain.prompts import PromptTemplate
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Qdrant
+from langchain_core.documents import Document
 from qdrant_client import QdrantClient
 
-from .fetch_data_from_db import get_transcipts_data
+from ..scrapper.db import YouTubeVideo
+from .fetch_data_from_db import fetch_transcript_from_db
 from gyanasuchi.common import env
 from gyanasuchi.common import setup_logging
 
@@ -44,7 +47,7 @@ class QuestionAnswerPipeline:
         self.logger = logging.getLogger(__name__)
 
     @staticmethod
-    def load_language_model(temperature=0) -> ChatOpenAI:
+    def load_language_model(temperature: int = 0) -> ChatOpenAI:
         return ChatOpenAI(
             openai_api_key=env("OPENAI_API_KEY"),
             model_name="gpt-3.5-turbo-16k",
@@ -52,11 +55,24 @@ class QuestionAnswerPipeline:
         )
 
     @staticmethod
-    def load_document_data() -> list:
-        return get_transcipts_data()
+    def load_document_data() -> List[Document]:
+        all_video_ids = YouTubeVideo.select(YouTubeVideo.id)
+        documents = []
+        for video_id in all_video_ids:
+            transcript_available, transcript = fetch_transcript_from_db(video_id)
+            if transcript_available:
+                # video_title = fetch_video_title_from_db(video_id)
+                video_url = f"https://www.youtube.com/watch?v={video_id}"
+                # document = Document(page_content=transcript, metadata={"source": video_url, "title": video_title, "video_id": video_id})
+                document = Document(
+                    page_content=transcript,
+                    metadata={"source": video_url, "video_id": str(video_id)},
+                )
+                documents.append(document)
+        return documents
 
     @staticmethod
-    def clean_data(documents: list) -> list:
+    def clean_data(documents: List[Document]) -> List[Document]:
         cleaned_documents = []
         for document in documents:
             # Remove extra spaces and newlines
@@ -66,11 +82,11 @@ class QuestionAnswerPipeline:
 
     @staticmethod
     def generate_text_chunks(
-        documents: list,
+        documents: List[Document],
         chunk_size: int = 500,
         chunk_overlap: int = 10,
         splitter=RecursiveCharacterTextSplitter,
-    ) -> list:
+    ) -> List[Document]:
         text_splitter = splitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
         return text_splitter.split_documents(documents)
 
@@ -82,7 +98,7 @@ class QuestionAnswerPipeline:
 
     def create_qdrant_database(
         self,
-        documents: list,
+        documents: List[Document],
         embeddings: HuggingFaceEmbeddings,
         recreate_collection: bool = True,
     ) -> Qdrant:
@@ -105,7 +121,7 @@ class QuestionAnswerPipeline:
             self.logger.error(f"Error creating Qdrant database: {e}")
             raise
 
-    def qa_from_qdrant(self, query: str) -> list:
+    def qa_from_qdrant(self, query: str) -> str:
         self.logger.info(f"Querying Qdrant with query: {query}")
         try:
             prompt_template = PromptTemplate.from_template(template)
