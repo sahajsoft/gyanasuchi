@@ -2,6 +2,7 @@ import logging
 import os
 
 data_volume_dir = "/data"
+vector_collection_names = {"youtube": "youtube_transcripts"}
 
 
 def setup_logging() -> None:

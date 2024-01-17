@@ -29,75 +29,58 @@ Only returns the helpful answer below and nothing else.
 
 load_dotenv()
 setup_logging()
+logger = logging.getLogger(__name__)
 
 
-class QuestionAnswerPipeline:
-    def __init__(
-        self,
-        collection_name: str,
-        embeddings_model: str = "sentence-transformers/all-MiniLM-L6-v2",
-    ):
-        self.qdrant_client = QdrantClient(
+def create_qdrant_database(
+    collection_name: str,
+    documents: List[Document],
+    embeddings: HuggingFaceEmbeddings,
+    recreate_collection: bool = True,
+) -> Qdrant:
+    logger.info("Qdrant database creation started")
+    logger.info(f"Number of documents: {len(documents)}")
+    logger.info(f"Collection name: {collection_name}")
+
+    # TODO: Use client.update_collection_aliases to rename and make this operation 0 downtime
+    qdrant_db = Qdrant.from_documents(
+        documents=documents,
+        embedding=embeddings,
+        collection_name=collection_name,
+        url=env("QDRANT_URL"),
+        api_key=env("QDRANT_API_KEY"),
+        force_recreate=recreate_collection,
+    )
+
+    logger.info("Qdrant database has been created successfully!!")
+    return qdrant_db
+
+
+def qa_from_qdrant(query: str, collection_name: str) -> str:
+    logger.info(f"Querying Qdrant with query: {query}")
+    prompt_template = PromptTemplate.from_template(template)
+    vector_store = Qdrant(
+        client=QdrantClient(
             url=env("QDRANT_URL"),
             api_key=env("QDRANT_API_KEY"),
-        )
-        self.embeddings_model = embeddings_model
-        self.collection_name = collection_name
-        self.logger = logging.getLogger(__name__)
-
-    def load_embeddings(self, device: str = "cpu") -> HuggingFaceEmbeddings:
-        return HuggingFaceEmbeddings(
-            model_name=self.embeddings_model,
-            model_kwargs={"device": device},
-            cache_folder=f"{data_volume_dir}/embeddings/",
-        )
-
-    def create_qdrant_database(
-        self,
-        documents: List[Document],
-        embeddings: HuggingFaceEmbeddings,
-        recreate_collection: bool = True,
-    ) -> Qdrant:
-        self.logger.info("Qdrant database creation started")
-        self.logger.info(f"Number of documents: {len(documents)}")
-        self.logger.info(f"Embeddings model: {self.embeddings_model}")
-        self.logger.info(f"Collection name: {self.collection_name}")
-
-        # TODO: Use client.update_collection_aliases to rename and make this operation 0 downtime
-        qdrant_db = Qdrant.from_documents(
-            documents=documents,
-            embedding=embeddings,
-            collection_name=self.collection_name,
-            url=env("QDRANT_URL"),
-            api_key=env("QDRANT_API_KEY"),
-            force_recreate=recreate_collection,
-        )
-
-        self.logger.info("Qdrant database has been created successfully!!")
-        return qdrant_db
-
-    def qa_from_qdrant(self, query: str) -> str:
-        self.logger.info(f"Querying Qdrant with query: {query}")
-        prompt_template = PromptTemplate.from_template(template)
-        vector_store = Qdrant(
-            client=self.qdrant_client,
-            collection_name=self.collection_name,
-            embeddings=self.load_embeddings(),
-        )
-        qa = RetrievalQA.from_chain_type(
-            llm=load_language_model(),
-            chain_type="stuff",
-            retriever=vector_store.as_retriever(
-                search_type="similarity",
-                search_kwargs={"k": 5},
-            ),
-            return_source_documents=True,
-            chain_type_kwargs={"prompt": prompt_template},
-        )
-        response = qa({"query": query})
-        result = response["result"]
-        self.logger.info(f"Response from Qdrant: {response}")
-        return result
+        ),
+        collection_name=collection_name,
+        embeddings=load_embeddings(),
+    )
+    qa = RetrievalQA.from_chain_type(
+        llm=load_language_model(),
+        chain_type="stuff",
+        retriever=vector_store.as_retriever(
+            search_type="similarity",
+            search_kwargs={"k": 5},
+        ),
+        return_source_documents=True,
+        chain_type_kwargs={"prompt": prompt_template},
+    )
+    response = qa({"query": query})
+    result = response["result"]
+    logger.info(f"Response from Qdrant: {response}")
+    return result
 
 
 def load_language_model(temperature: int = 0) -> ChatOpenAI:
@@ -143,3 +126,14 @@ def generate_text_chunks(
 ) -> List[Document]:
     text_splitter = splitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     return text_splitter.split_documents(documents)
+
+
+def load_embeddings(
+    embeddings_model: str = "sentence-transformers/all-MiniLM-L6-v2",
+    device: str = "cpu",
+) -> HuggingFaceEmbeddings:
+    return HuggingFaceEmbeddings(
+        model_name=embeddings_model,
+        model_kwargs={"device": device},
+        cache_folder=f"{data_volume_dir}/embeddings/",
+    )

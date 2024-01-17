@@ -10,7 +10,8 @@ from slack_bolt import App
 from slack_bolt import Say
 from slack_bolt.adapter.fastapi import SlackRequestHandler
 
-from gyanasuchi.app.qa_pipeline import QuestionAnswerPipeline
+from gyanasuchi.app.qa_pipeline import qa_from_qdrant
+from gyanasuchi.common import vector_collection_names
 from gyanasuchi.modal import create_stub
 from gyanasuchi.modal import nfs_mapping
 
@@ -44,10 +45,12 @@ def handle_app_mentions(body: Dict[str, Any], say: Say):
     print(
         f"Requested question through a mention with {message=} and a response is to be sent to {thread_ts=}",
     )
-    pipeline = QuestionAnswerPipeline(collection_name="youtube_transcripts")
 
     try:
-        say(pipeline.qa_from_qdrant(message), thread_ts=thread_ts)
+        say(
+            qa_from_qdrant(message, vector_collection_names["youtube"]),
+            thread_ts=thread_ts,
+        )
     except Exception as e:
         print(f"QA pipeline execution failed {e}")
         say(
