@@ -1,9 +1,11 @@
 import logging
 import re
+from datetime import datetime
 from typing import List
 from typing import Type
 
 from dotenv import load_dotenv
+from humanize import precisedelta
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.chat_models import ChatOpenAI
@@ -13,11 +15,9 @@ from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
 from qdrant_client import QdrantClient
 
-from gyanasuchi.app.fetch_data_from_db import fetch_transcript_from_db
 from gyanasuchi.common import data_volume_dir
 from gyanasuchi.common import env
 from gyanasuchi.common import setup_logging
-from gyanasuchi.scrapper.db import YouTubeVideo
 
 template = """Use the following pieces of information to answer the users question.
 Include every piece of information in the answer. Do not miss anything from the given context to include in answer.
@@ -30,9 +30,62 @@ Only returns the helpful answer below and nothing else.
 load_dotenv()
 setup_logging()
 logger = logging.getLogger(__name__)
+_qa_pipeline: RetrievalQA | None = None
 
 
-def create_qdrant_database(
+def _fetch_qa_pipeline(
+    collection_name: str,
+    prompt_template: PromptTemplate,
+) -> RetrievalQA:
+    global _qa_pipeline
+    if _qa_pipeline is not None:
+        print("QA Pipeline was already available")
+        return _qa_pipeline
+
+    start = datetime.now()
+    vector_store = Qdrant(
+        client=QdrantClient(
+            url=env("QDRANT_URL"),
+            api_key=env("QDRANT_API_KEY"),
+        ),
+        collection_name=collection_name,
+        embeddings=load_embeddings(),
+    )
+    _qa_pipeline = RetrievalQA.from_chain_type(
+        llm=_load_language_model(),
+        chain_type="stuff",
+        retriever=vector_store.as_retriever(
+            search_type="similarity",
+            search_kwargs={"k": 5},
+        ),
+        return_source_documents=True,
+        chain_type_kwargs={"prompt": prompt_template},
+    )
+    time_taken = precisedelta(datetime.now() - start)
+    print(f"QA Pipeline had to be initialized and took {time_taken}")
+
+    return _qa_pipeline
+
+
+def _load_language_model(temperature: int = 0) -> ChatOpenAI:
+    return ChatOpenAI(
+        openai_api_key=env("OPENAI_API_KEY"),
+        model_name="gpt-3.5-turbo-16k",
+        temperature=temperature,
+    )
+
+
+def qa_from_qdrant(query: str, collection_name: str) -> str:
+    logger.info(f"Querying Qdrant with query: {query}")
+    qa = _fetch_qa_pipeline(collection_name, PromptTemplate.from_template(template))
+
+    response = qa({"query": query})
+    result = response["result"]
+    logger.info(f"Response from Qdrant: {response}")
+    return result
+
+
+def fill_qdrant_collection_with_data(
     collection_name: str,
     documents: List[Document],
     embeddings: HuggingFaceEmbeddings,
@@ -54,59 +107,6 @@ def create_qdrant_database(
 
     logger.info("Qdrant database has been created successfully!!")
     return qdrant_db
-
-
-def qa_from_qdrant(query: str, collection_name: str) -> str:
-    logger.info(f"Querying Qdrant with query: {query}")
-    prompt_template = PromptTemplate.from_template(template)
-    vector_store = Qdrant(
-        client=QdrantClient(
-            url=env("QDRANT_URL"),
-            api_key=env("QDRANT_API_KEY"),
-        ),
-        collection_name=collection_name,
-        embeddings=load_embeddings(),
-    )
-    qa = RetrievalQA.from_chain_type(
-        llm=load_language_model(),
-        chain_type="stuff",
-        retriever=vector_store.as_retriever(
-            search_type="similarity",
-            search_kwargs={"k": 5},
-        ),
-        return_source_documents=True,
-        chain_type_kwargs={"prompt": prompt_template},
-    )
-    response = qa({"query": query})
-    result = response["result"]
-    logger.info(f"Response from Qdrant: {response}")
-    return result
-
-
-def load_language_model(temperature: int = 0) -> ChatOpenAI:
-    return ChatOpenAI(
-        openai_api_key=env("OPENAI_API_KEY"),
-        model_name="gpt-3.5-turbo-16k",
-        temperature=temperature,
-    )
-
-
-def load_document_data() -> List[Document]:
-    all_video_ids = YouTubeVideo.select(YouTubeVideo.id)
-    documents = []
-    for video_id in all_video_ids:
-        transcript_available, transcript = fetch_transcript_from_db(video_id)
-        if transcript_available:
-            # video_title = fetch_video_title_from_db(video_id)
-            video_url = f"https://www.youtube.com/watch?v={video_id}"
-            # document = Document(page_content=transcript, metadata={"source": video_url, "title": video_title,
-            # "video_id": video_id})
-            document = Document(
-                page_content=transcript,
-                metadata={"source": video_url, "video_id": str(video_id)},
-            )
-            documents.append(document)
-    return documents
 
 
 def clean_data(documents: List[Document]) -> List[Document]:
