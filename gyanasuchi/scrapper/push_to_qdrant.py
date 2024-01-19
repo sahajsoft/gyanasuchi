@@ -15,7 +15,7 @@ from gyanasuchi.modal import nfs_mapping
 from gyanasuchi.scrapper.db import YouTubeTranscriptLine
 from gyanasuchi.scrapper.db import YouTubeVideo
 
-stub = create_stub(__name__, "qdrant-gyanasuchi")
+stub = create_stub(__name__, "qdrant-secrets")
 logger = logging.getLogger(__name__)
 
 
