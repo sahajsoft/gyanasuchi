@@ -18,4 +18,4 @@ def create_stub(name: str, *secret_names: str) -> Stub:
 
 
 def nfs_mapping() -> Dict[str, NetworkFileSystem]:
-    return {data_volume_dir: data_volume}
+    return {data_volume_dir(): data_volume}

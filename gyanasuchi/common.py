@@ -1,7 +1,6 @@
 import logging
 import os
 
-data_volume_dir = "/data"
 vector_collection_names = {"youtube": "youtube_transcripts"}
 
 
@@ -14,3 +13,7 @@ def setup_logging() -> None:
 
 def env(key: str, default: str = None) -> str:
     return os.environ.get(key, default)
+
+
+def data_volume_dir() -> str:
+    return env("DATA_VOLUME_DIR")

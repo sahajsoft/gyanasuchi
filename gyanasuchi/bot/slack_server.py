@@ -18,9 +18,10 @@ from gyanasuchi.modal import nfs_mapping
 load_dotenv()
 stub = create_stub(
     __name__,
-    "slack-gyanasuchi",
-    "open-ai-gyanasuchi",
-    "qdrant-gyanasuchi",
+    "slack-secrets",
+    "qdrant-secrets",
+    "open-ai-secrets",
+    "config",
 )
 web_app = FastAPI()
 slack_app = App()
@@ -48,7 +49,7 @@ def handle_app_mentions(body: Dict[str, Any], say: Say):
 
     try:
         say(
-            qa_from_qdrant(message, vector_collection_names["youtube"]),
+            qa_from_qdrant(message, vector_collection_names["youtube"])["result"],
             thread_ts=thread_ts,
         )
     except Exception as e:
