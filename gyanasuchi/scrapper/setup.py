@@ -39,9 +39,6 @@ def initiate(playlists: List[Playlists]) -> List[YouTubePlaylist]:
     logger.info("Connecting to the database")
     raw_db.connect()
 
-    logger.info(f"Dropping tables to be created tables {models_to_create}")
-    raw_db.drop_tables(models_to_create)
-
     logger.info(f"Creating tables {models_to_create}")
     raw_db.create_tables(models_to_create)
 
