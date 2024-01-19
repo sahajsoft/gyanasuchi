@@ -1,6 +1,5 @@
 .idea/
 __pycache__/
 .env
-.DS_Store
-gyanasuchi/.DS_Store
-gyanasuchi/artifacts/
+**/.DS_Store
+artifacts/
