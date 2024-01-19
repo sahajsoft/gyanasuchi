@@ -12,7 +12,14 @@ from gyanasuchi.scrapper.db import data_volume
 def create_stub(name: str, *secret_names: str) -> Stub:
     return Stub(
         name=name,
-        image=Image.debian_slim().poetry_install_from_file("pyproject.toml"),
+        image=Image.debian_slim()
+        .apt_install(
+            "python3-dev",
+            "default-libmysqlclient-dev",
+            "build-essential",
+            "pkg-config",
+        )
+        .poetry_install_from_file("pyproject.toml"),
         secrets=[Secret.from_name(name) for name in secret_names],
     )
 
