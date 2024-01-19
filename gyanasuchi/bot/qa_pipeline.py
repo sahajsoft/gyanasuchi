@@ -1,11 +1,10 @@
 import logging
 import re
 from datetime import datetime
-from typing import Any
-from typing import Dict
 from typing import List
 from typing import Type
 
+from dotenv import load_dotenv
 from humanize import precisedelta
 from langchain.chains import RetrievalQA
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -28,6 +27,7 @@ question:{question}
 Only returns the helpful answer below and nothing else.
 """
 
+load_dotenv()
 setup_logging()
 logger = logging.getLogger(__name__)
 _qa_pipeline: RetrievalQA | None = None
@@ -75,13 +75,14 @@ def _load_language_model(temperature: int = 0) -> ChatOpenAI:
     )
 
 
-def qa_from_qdrant(query: str, collection_name: str) -> Dict[str, Any]:
+def qa_from_qdrant(query: str, collection_name: str) -> str:
     logger.info(f"Querying Qdrant with query: {query}")
     qa = _fetch_qa_pipeline(collection_name, PromptTemplate.from_template(template))
 
     response = qa({"query": query})
+    result = response["result"]
     logger.info(f"Response from Qdrant: {response}")
-    return response
+    return result
 
 
 def fill_qdrant_collection_with_data(
@@ -134,5 +135,5 @@ def load_embeddings(
     return HuggingFaceEmbeddings(
         model_name=embeddings_model,
         model_kwargs={"device": device},
-        cache_folder=f"{data_volume_dir()}/embeddings/",
+        cache_folder=f"{data_volume_dir}/embeddings/",
     )

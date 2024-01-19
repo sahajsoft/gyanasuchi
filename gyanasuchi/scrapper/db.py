@@ -14,7 +14,7 @@ from gyanasuchi.common import data_volume_dir
 
 logger = logging.getLogger(__name__)
 data_volume = NetworkFileSystem.persisted("data")
-raw_db = SqliteDatabase(Path(data_volume_dir(), "raw.db"))
+raw_db = SqliteDatabase(Path(data_volume_dir, "raw.db"))
 
 
 class BaseModel(Model):
