@@ -18,9 +18,9 @@ from gyanasuchi.modal import nfs_mapping
 load_dotenv()
 stub = create_stub(
     __name__,
-    "slack-gyanasuchi",
-    "open-ai-gyanasuchi",
-    "qdrant-gyanasuchi",
+    "slack-secrets",
+    "open-ai-secrets",
+    "qdrant-secrets",
 )
 web_app = FastAPI()
 slack_app = App()
