@@ -57,8 +57,10 @@ def initiate(playlists: List[Playlists]) -> List[YouTubePlaylist]:
 def main() -> None:
     initiate.remote(
         [
+            # pragma: allowlist nextline secret
             {"id": "PLarGM64rPKBnvFhv7Zgvj2t_q399POBh7", "name": "DevDay_"},
             {
+                # pragma: allowlist nextline secret
                 "id": "PL1T8fO7ArWleyIqOy37OVXsP4hFXymdOZ",
                 "name": "LLM Bootcamp - Spring 2023",
             },
